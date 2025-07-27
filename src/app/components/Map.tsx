@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -27,8 +26,16 @@ export default function Map() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [gasData, setGasData] = useState<mapData[]>([]);
-  const [kilometerRadius, setKilometerRadius] = useState("");
+  const [kilometerRadius, setKilometerRadius] = useState("0.1");
   const [filteredData, setFilteredData] = useState<mapData[]>([]);
+
+  const userIcon = new L.Icon({
+    iconUrl: "/car_pointer.png", // blue marker icon
+    iconSize: [50, 50],
+    iconAnchor: [15, 50],
+    popupAnchor: [0, -40],
+  });
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -129,7 +136,7 @@ export default function Map() {
   };
 
   return (
-    <div>
+    <div className='bg-white'>
       <div>
         <input
           className='text-black p-1 border border-black w-full'
@@ -159,61 +166,109 @@ export default function Map() {
           </ul>
         )}
       </div>
-      <div className='flex flex-row'>
-        <input
-          type="number"
-          className='text-black p-1 border border-black'
-          placeholder='Latitude'
-          value={position[0]}
-          onChange={handleLatitudeChange}
-        />
-        <input
-          type="number"
-          className='text-black p-1 border border-black'
-          placeholder='Longitude'
-          value={position[1]}
-          onChange={handleLongitudeChange}
-        />
-        <input
-          type="number"
-          className='text-black p-1 border border-black'
-          placeholder='kilometer radius'
-          value={kilometerRadius[0]}
-          onChange={handleKilometerChange}
-        />
-        <div className="block relative">
-          <div className="dropdown-content">
-            <p>Hello World!</p>
-          </div>
+      <div className='flex flex-row gap-2 mt-2 mx-[30px]'>
+        <div>
+          <label className="block text-sm text-black">Latitude</label>
+          <input
+            type="number"
+            className='text-black p-1 border border-black'
+            placeholder='Latitude'
+            value={position[0]}
+            onChange={handleLatitudeChange}
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-black">Longitude</label>
+          <input
+            type="number"
+            className='text-black p-1 border border-black'
+            placeholder='Longitude'
+            value={position[1]}
+            onChange={handleLongitudeChange}
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-black">Radius (km)</label>
+          <input
+            type="number"
+            className='text-black p-1 border border-black'
+            placeholder='Radius in km'
+            value={kilometerRadius}
+            step="0.1"
+            onChange={handleKilometerChange}
+          />
         </div>
       </div>
-      <MapContainer center={position} zoom={13} scrollWheelZoom={true} className="w-[500px] h-[500px]">
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {filteredData.map((data) => (
-          <div key={data._id}>
-            {data._id}
-            <Marker position={[data.lat, data.lon]} icon={customIcon}>
-              <Popup>
-                Name: {data.name}
-                <br></br>
-                Latitude: {data.lat}
-                <br></br>
-                Longitude: {data.lon}
-                <br></br>
-                Premium: {data.premium}
-                <br></br>
-                Unleaded: {data.unleaded}
-                <br></br>
-                Diesel: {data.diesel}
-              </Popup>
-            </Marker>
-          </div>
-        ))}
-        <RecenterMap position={position} />
-      </MapContainer>
+      <div className='flex items-center justify-center p-[50px]'>
+        <MapContainer center={position} zoom={13} scrollWheelZoom={true} className="w-[600px] h-[600px]">
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+
+          {/* Marker for user’s current position */}
+          <Marker position={position} icon={userIcon}>
+            <Popup>
+              You are here
+              <br />
+              Latitude: {position[0].toFixed(6)}
+              <br />
+              Longitude: {position[1].toFixed(6)}
+            </Popup>
+          </Marker>
+
+          {filteredData.map((data) => (
+            <div key={data._id}>
+              {data._id}
+              <Marker position={[data.lat, data.lon]} icon={customIcon}>
+                <Popup>
+                  Name: {data.name}
+                  <br></br>
+                  Latitude: {data.lat}
+                  <br></br>
+                  Longitude: {data.lon}
+                  <br></br>
+                  Premium: {data.premium}
+                  <br></br>
+                  Unleaded: {data.unleaded}
+                  <br></br>
+                  Diesel: {data.diesel}
+                </Popup>
+              </Marker>
+            </div>
+          ))}
+          <RecenterMap position={position} />
+        </MapContainer>
+      </div>
+      {/* Filtered Data Table */}
+      {filteredData.length > 0 && (
+        <div className="mt-4 overflow-x-auto mx-[50px]">
+          <table className="min-w-full text-sm text-left text-black border border-gray-300">
+            <thead className="bg-gray-200">
+              <tr>
+                <th className="px-4 py-2 border">Name</th>
+                <th className="px-4 py-2 border">Latitude</th>
+                <th className="px-4 py-2 border">Longitude</th>
+                <th className="px-4 py-2 border">Premium</th>
+                <th className="px-4 py-2 border">Unleaded</th>
+                <th className="px-4 py-2 border">Diesel</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredData.map((data) => (
+                <tr key={data._id} className="bg-white hover:bg-gray-100">
+                  <td className="px-4 py-2 border">{data.name}</td>
+                  <td className="px-4 py-2 border">{data.lat}</td>
+                  <td className="px-4 py-2 border">{data.lon}</td>
+                  <td className="px-4 py-2 border">{data.premium}</td>
+                  <td className="px-4 py-2 border">{data.unleaded}</td>
+                  <td className="px-4 py-2 border">{data.diesel}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
