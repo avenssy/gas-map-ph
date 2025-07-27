@@ -36,7 +36,6 @@ export default function Map() {
     popupAnchor: [0, -40],
   });
 
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -50,7 +49,7 @@ export default function Map() {
     };
     
     fetchData();
-    console.log ("Gas prices are: " + gasData);
+    console.log("Gas prices are: ", gasData);
   }, []);
 
   // Handle on change of longitude input
@@ -84,7 +83,6 @@ export default function Map() {
     setFilteredData(filtered);
   };
 
-
   // Calculate kilometer radius distance
   function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
     const R = 6371; // Radius of the earth in km
@@ -98,7 +96,6 @@ export default function Map() {
     const distance = R * c; // Distance in km
     return distance;
   }
-
 
   // Refreshes map on change
   function RecenterMap({ position }: { position: [number, number] }) {
@@ -133,6 +130,12 @@ export default function Map() {
     } catch (err) {
       console.error("Error fetching Nominatim:", err);
     }
+  };
+
+  // Handle the row click and open Google Maps
+  const handleRowClick = (lat: number, lon: number) => {
+    const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+    window.open(googleMapsUrl, "_blank");
   };
 
   return (
@@ -219,7 +222,6 @@ export default function Map() {
 
           {filteredData.map((data) => (
             <div key={data._id}>
-              {data._id}
               <Marker position={[data.lat, data.lon]} icon={customIcon}>
                 <Popup>
                   Name: {data.name}
@@ -256,7 +258,11 @@ export default function Map() {
             </thead>
             <tbody>
               {filteredData.map((data) => (
-                <tr key={data._id} className="bg-white hover:bg-gray-100">
+                <tr
+                  key={data._id}
+                  className="bg-white hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleRowClick(data.lat, data.lon)}
+                >
                   <td className="px-4 py-2 border">{data.name}</td>
                   <td className="px-4 py-2 border">{data.lat}</td>
                   <td className="px-4 py-2 border">{data.lon}</td>
